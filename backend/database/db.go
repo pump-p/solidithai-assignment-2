@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/pump-p/solidithai-assignment-2/backend/config"
+	"github.com/pump-p/solidithai-assignment-2/backend/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -21,4 +22,9 @@ func ConnectDatabase() {
 	}
 
 	log.Println("Database connected successfully.")
+
+	// Migrate the User model
+	if err := DB.AutoMigrate(&models.User{}); err != nil {
+		log.Fatal("Failed to migrate database: ", err)
+	}
 }
