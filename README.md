@@ -9,6 +9,7 @@ This project is a full-stack application that includes a **Go** backend and a **
 2. [Tech Stack](#tech-stack)
 3. [Installation Guide](#installation-guide)
 4. [Design Decisions](#design-decisions)
+5. [Postman API Documentation](#postman-api-documentation)
 
 ## Project Overview
 
@@ -120,3 +121,10 @@ Now, you can interact with the application in your browser, with the frontend ma
 ### Database
 
 - **MariaDB** was chosen over MySQL because it is a fully open-source, while maintaining compatibility with MySQL applications.
+
+
+## Postman API Documentation
+
+You can find the detailed API documentation for this project on Postman here:
+
+[Postman API Documentation](https://documenter.getpostman.com/view/26586964/2sAYBaAVdd)
