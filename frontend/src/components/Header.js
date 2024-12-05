@@ -9,7 +9,7 @@ const Header = () => {
     <header className="bg-gray-800 text-white py-4">
       <nav className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-lg font-bold">
-          HOME
+          Home
         </Link>
         <div className="space-x-4">
           {!isAuthenticated ? (
@@ -23,6 +23,12 @@ const Header = () => {
             </>
           ) : (
             <>
+              <Link to="/logs" className="hover:underline">
+                View Logs
+              </Link>
+              <Link to="/websocket" className="hover:underline">
+                WebSocket Client
+              </Link>
               <Link to="/users" className="hover:underline">
                 Manage Users
               </Link>
