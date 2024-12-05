@@ -12,19 +12,11 @@ import (
 func SetupRouter(router *gin.Engine) {
 
 	// CORS middleware
-	// router.Use(cors.New(cors.Config{
-	// 	AllowOrigins:     []string{"http://localhost:3000"},
-	// 	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
-	// 	AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accpet"},
-	// 	ExposeHeaders:    []string{"Content-Length", "Authorization"},
-	// 	AllowCredentials: true,
-	// 	MaxAge:           12 * time.Hour,
-	// }))
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"*"},
-		AllowHeaders:     []string{"*"},
-		ExposeHeaders:    []string{"*"},
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accpet"},
+		ExposeHeaders:    []string{"Content-Length", "Authorization"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
@@ -42,5 +34,12 @@ func SetupRouter(router *gin.Engine) {
 		userRoutes.POST("", controllers.CreateUser)
 		userRoutes.PUT("/:id", controllers.UpdateUser)
 		userRoutes.DELETE("/:id", controllers.DeleteUser)
+	}
+
+	// Protected routes for log querying
+	logRoutes := router.Group("/logs")
+	logRoutes.Use(middlewares.AuthMiddleware())
+	{
+		logRoutes.GET("", controllers.GetLogs)
 	}
 }

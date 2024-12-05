@@ -1,10 +1,15 @@
 package utils
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/pump-p/solidithai-assignment-2/backend/config"
 )
 
 var upgrader = websocket.Upgrader{
@@ -16,15 +21,15 @@ var upgrader = websocket.Upgrader{
 var clients = make(map[*websocket.Conn]bool)
 var broadcast = make(chan Message)
 
-// Message object to handle incoming/outgoing messages
+// Message represents the structure for incoming/outgoing WebSocket messages
 type Message struct {
 	Sender  string `json:"sender"`
 	Content string `json:"content"`
+	Time    string `json:"time"`
 }
 
-// HandleWebSocketConnections sets up WebSocket connections
+// HandleWebSocketConnections handles new WebSocket connections
 func HandleWebSocketConnections(w http.ResponseWriter, r *http.Request) {
-	// Upgrade initial GET request to a WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Printf("Failed to upgrade to WebSocket: %v\n", err)
@@ -34,10 +39,9 @@ func HandleWebSocketConnections(w http.ResponseWriter, r *http.Request) {
 	// Register new client
 	clients[conn] = true
 
-	// Listen indefinitely for new messages
+	// Listen for new messages from this client
 	for {
 		var msg Message
-		// Read message from client
 		err := conn.ReadJSON(&msg)
 		if err != nil {
 			fmt.Printf("Error reading JSON: %v\n", err)
@@ -45,23 +49,23 @@ func HandleWebSocketConnections(w http.ResponseWriter, r *http.Request) {
 			conn.Close()
 			break
 		}
-		// Send received message to broadcast channel
+		msg.Time = time.Now().Format(time.RFC3339) // Add timestamp to message
 		broadcast <- msg
+
+		// Store the message in Elasticsearch
+		go storeLog(msg)
 	}
 }
 
 func init() {
-	// Start broadcasting messages in a separate goroutine
+	// Start broadcasting messages
 	go handleMessages()
 }
 
-// handleMessages listens for incoming messages on the broadcast channel
-// and sends them to all connected clients
+// handleMessages listens for incoming messages on the broadcast channel and sends them to all clients
 func handleMessages() {
 	for {
-		// Grab the next message from the broadcast channel
 		msg := <-broadcast
-		// Send it out to every client that is currently connected
 		for client := range clients {
 			err := client.WriteJSON(msg)
 			if err != nil {
@@ -70,5 +74,25 @@ func handleMessages() {
 				delete(clients, client)
 			}
 		}
+	}
+}
+
+// storeLog stores a log message in Elasticsearch
+func storeLog(msg Message) {
+	esClient := config.ESClient
+	data, err := json.Marshal(msg)
+	if err != nil {
+		fmt.Printf("Failed to marshal message: %v\n", err)
+		return
+	}
+
+	// Index the log into Elasticsearch
+	_, err = esClient.Index(
+		"streaming_logs",
+		bytes.NewReader(data),
+		esClient.Index.WithContext(context.Background()),
+	)
+	if err != nil {
+		fmt.Printf("Failed to index message: %v\n", err)
 	}
 }
