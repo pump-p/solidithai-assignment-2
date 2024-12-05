@@ -47,6 +47,17 @@ func UpdateUser(id string, updates map[string]interface{}) (*models.User, error)
 		return nil, errors.New("user not found")
 	}
 
+	// Check if the password is being updated
+	if password, ok := updates["password"]; ok {
+		// Set the password to the user model and hash it using the method from Signup
+		user.Password = password.(string)
+		if err := user.HashPassword(); err != nil {
+			return nil, errors.New("failed to hash password")
+		}
+		// Update the password in the updates map
+		updates["password"] = user.Password
+	}
+
 	// Apply updates
 	if err := database.DB.Model(&user).Updates(updates).Error; err != nil {
 		return nil, errors.New("failed to update user")
